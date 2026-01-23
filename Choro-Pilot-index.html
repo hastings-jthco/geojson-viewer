@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Choropleth - Pilot</title>
+    <style>
+      html, body {
+        height: 700px;
+        padding: 0;
+        margin: 0;
+        }
+      #map {
+       height: 640px;
+       width: 640px;
+       overflow: hidden;
+       float: left;
+       border: thin solid #333;
+       }
+      #capture {
+       height: 360px;
+       width: 480px;
+       overflow: hidden;
+       float: left;
+       background-color: #ECECFB;
+       border: thin solid #333;
+       border-left: none;
+       }
+    ul { 
+        display: block;
+        list-style-type: disc;
+        margin-block-start: 1em;
+        margin-block-end: 1em;
+        padding-inline-start: 5px;
+       }
+    </style>
+  </head>
+  <body>
+    <table border=1>
+      <tr>
+        <th colspan=2><big>Choropleth-Pilot</big></th>
+        <th> </th>
+      </tr>
+      <tr>
+        <td width=200px valign=TOP>
+          <p>&nbsp;Using <b>ACS 2023 5-yr data</b>
+          <p><br><center><big><b>Legend</b></big></center>
+          <p><u>Layers</u>
+            <br><input type="checkbox" id="LTahoe" onChange="hideshow(this)"> Lake Tahoe
+            <br><input type="checkbox" id="AllCos" checked disabled> All Countys
+          <p><u>Themes</u>
+            <br><input type="radio" id="POP" name=Theme disabled> Population / SqMi
+            <br><input type="radio" id="MHI" name=Theme disabled> Median HH_Income
+          <p><u>Symbols</u>
+            <br><span id="Symbs") </span>
+        </td>
+        <td> <div id="map"></div></td>
+      </tr>
+    </table>
+    <!--div id="map"></div -->
+    <!--div id="capture"></div -->
+    <!-- script src='https://raw.githubusercontent.com/Jordan-Hastings/Choro-Pilot/refs/heads/main/calneva.js'> </script -->
+    <script>
+//*
+const calneva = [{Name:'Alameda County, California',POP:2241,MHI:126.2},
+{Name:'Alpine County, California',POP:2,MHI:110.8},
+{Name:'Amador County, California',POP:69,MHI:81.5},
+{Name:'Butte County, California',POP:128,MHI:68.6},
+{Name:'Calaveras County, California',POP:45,MHI:79.9},
+{Name:'Colusa County, California',POP:19,MHI:75.1},
+{Name:'Contra Costa County, California',POP:1620,MHI:125.7},
+{Name:'Del Norte County, California',POP:27,MHI:66.8},
+{Name:'El Dorado County, California',POP:113,MHI:106.2},
+{Name:'Fresno County, California',POP:170,MHI:71.4},
+{Name:'Glenn County, California',POP:22,MHI:70.5},
+{Name:'Humboldt County, California',POP:38,MHI:61.1},
+{Name:'Imperial County, California',POP:43,MHI:56.4},
+{Name:'Inyo County, California',POP:2,MHI:72.4},
+{Name:'Kern County, California',POP:112,MHI:67.7},
+{Name:'Kings County, California',POP:110,MHI:68.8},
+{Name:'Lake County, California',POP:54,MHI:58.7},
+{Name:'Lassen County, California',POP:7,MHI:64.4},
+{Name:'Los Angeles County, California',POP:2427,MHI:87.8},
+{Name:'Madera County, California',POP:74,MHI:75.5},
+{Name:'Marin County, California',POP:497,MHI:142.8},
+{Name:'Mariposa County, California',POP:12,MHI:65.4},
+{Name:'Mendocino County, California',POP:26,MHI:64.7},
+{Name:'Merced County, California',POP:148,MHI:65},
+{Name:'Modoc County, California',POP:2,MHI:56.6},
+{Name:'Mono County, California',POP:4,MHI:87},
+{Name:'Monterey County, California',POP:133,MHI:94.5},
+{Name:'Napa County, California',POP:182,MHI:109},
+{Name:'Nevada County, California',POP:107,MHI:84.9},
+{Name:'Orange County, California',POP:3991,MHI:113.7},
+{Name:'Placer County, California',POP:293,MHI:114.7},
+{Name:'Plumas County, California',POP:8,MHI:64.9},
+{Name:'Riverside County, California',POP:340,MHI:89.7},
+{Name:'Sacramento County, California',POP:1641,MHI:88.7},
+{Name:'San Benito County, California',POP:48,MHI:108.3},
+{Name:'San Bernardino County, California',POP:109,MHI:82.2},
+{Name:'San Diego County, California',POP:780,MHI:102.3},
+{Name:'San Francisco County, California',POP:17847,MHI:141.4},
+{Name:'San Joaquin County, California',POP:566,MHI:88.5},
+{Name:'San Luis Obispo County, California',POP:85,MHI:93.4},
+{Name:'San Mateo County, California',POP:1661,MHI:156},
+{Name:'Santa Barbara County, California',POP:162,MHI:96},
+{Name:'Santa Clara County, California',POP:1474,MHI:159.7},
+{Name:'Santa Cruz County, California',POP:598,MHI:109.3},
+{Name:'Shasta County, California',POP:48,MHI:71.9},
+{Name:'Sierra County, California',POP:3,MHI:60},
+{Name:'Siskiyou County, California',POP:7,MHI:55.5},
+{Name:'Solano County, California',POP:549,MHI:100},
+{Name:'Sonoma County, California',POP:308,MHI:102.8},
+{Name:'Stanislaus County, California',POP:369,MHI:79.7},
+{Name:'Sutter County, California',POP:164,MHI:75.5},
+{Name:'Tehama County, California',POP:22,MHI:61.8},
+{Name:'Trinity County, California',POP:5,MHI:53.5},
+{Name:'Tulare County, California',POP:99,MHI:69.5},
+{Name:'Tuolumne County, California',POP:25,MHI:72.3},
+{Name:'Ventura County, California',POP:455,MHI:107.3},
+{Name:'Yolo County, California',POP:215,MHI:88.8},
+{Name:'Yuba County, California',POP:131,MHI:73.3},
+{Name:'Churchill County, Nevada',POP:5,MHI:73.3},
+{Name:'Clark County, Nevada',POP:291,MHI:73.8},
+{Name:'Douglas County, Nevada',POP:70,MHI:88},
+{Name:'Elko County, Nevada',POP:3,MHI:83.4},
+{Name:'Esmeralda County, Nevada',POP:0,MHI:-666},
+{Name:'Eureka County, Nevada',POP:0,MHI:73.1},
+{Name:'Humboldt County, Nevada',POP:2,MHI:79.9},
+{Name:'Lander County, Nevada',POP:1,MHI:84.5},
+{Name:'Lincoln County, Nevada',POP:0,MHI:69.5},
+{Name:'Lyon County, Nevada',POP:30,MHI:73.5},
+{Name:'Mineral County, Nevada',POP:1,MHI:50.6},
+{Name:'Nye County, Nevada',POP:3,MHI:56},
+{Name:'Pershing County, Nevada',POP:1,MHI:72},
+{Name:'Storey County, Nevada',POP:16,MHI:96},
+{Name:'Washoe County, Nevada',POP:78,MHI:85.6},
+{Name:'White Pine County, Nevada',POP:1,MHI:72.3},
+{Name:'Carson City, Nevada',POP:403,MHI:71.8}]
+//*/
+      var map;
+    //var src = 'https://developers.google.com/maps/documentation/javascript/examples/kml/westcampus.kml';
+      function initMap() { //alert("v.131h, "+calneva.length)
+        const paramsString = window.location.search; //console.log("at initMap() ", paramsString)
+        if (paramsString.indexOf("A1")>0) src = 'https://raw.githubusercontent.com/Jordan-Hastings/Choro-Pilot/refs/heads/main/Alameda1-County.kml';
+        if (paramsString.indexOf("C1")>0) src = 'https://raw.githubusercontent.com/Jordan-Hastings/Choro-Pilot/refs/heads/main/centerPt1.kml';
+        if (paramsString.toUpperCase().indexOf("POP")>0) document.getElementById("POP").checked = true;
+        if (paramsString.toUpperCase().indexOf("MHI")>0) document.getElementById("MHI").checked = true;
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: new google.maps.LatLng(37, -120),
+          zoom: 6, zoomControl: true,
+          streetViewControl: false,
+          mapTypeId: 'roadmap'
+        });
+      var src = 'https://raw.githubusercontent.com/Jordan-Hastings/Choro-Pilot/refs/heads/main/~lake-tahoe_818.geojson';
+        loadGeoJsonFile(src); 
+        map.data.forEach((feature) => {console.log(feature.getProperty("Name"))})                  
+      var src = 'https://raw.githubusercontent.com/Jordan-Hastings/Choro-Pilot/refs/heads/main/~CalNeva-County.geojson';
+        loadGeoJsonFile(src);
+                          
+  //map.data.setStyle((feature) => { var prop = feature.getProperty("Name"); return {fillColor:(prop.indexOf("Tahoe")>0?"blue":prop.charAt(0)<"M"?'green':'red'), fillOpacity:0.1, strokeColor:'black', strokeWeight:1}});
+      map.data.setStyle(styler)
+        function styler(feature) {
+          var L = calneva.length;
+          function nameLU() { while(--L>0) if (calneva[L].Name == name) break; return L }
+          var name = feature.getProperty("Name"); nameLU(); var pop = calneva[L].POP, mhi = calneva[L].MHI;
+          var color = (L==0?"blue":"white")
+          if (document.getElementById("POP").checked) {
+            color = (pop<10 ? "dodgerblue" : pop>10000 ? "crimson": pop>1000 ? "tomato" : pop>250 ? "orange" : pop>100 ? "yellow" :"antiqueWhite")
+            postSymbols('pop<10 ? "dodgerblue" : pop>10,000 ? "crimson": pop>1,000 ? "tomato" : pop>250 ? "orange" : pop>100 ? "yellow" :"antiqueWhite"')
+          }
+          if (document.getElementById("MHI").checked) {
+            color = (mhi<60 ? "crimson" : mhi<75 ? "pink" : mhi>105 ? "darkGreen" : mhi>90 ? "lightGreen" : "antiqueWhite")
+            postSymbols('mhi<60 ? "crimson" : mhi<75 ? "pink" : mhi>105 ? "darkGreen" : mhi>90 ? "lightGreen" : "antiqueWhite"')
+          }
+          return {clickable:true, fillColor:color, fillOpacity:0.2, strokeColor:'darkGray', strokeWeight:1}
+        }
+
+        function postSymbols(txt) {
+          var i = txt.lastIndexOf(":"); txt = txt.slice(0,i+1)+"else "+txt.slice(i+1)
+          document.getElementById("Symbs").innerHTML = txt.replace(/:/g,"<br>")
+        }
+  //map.data.setStyle((feature) => { return {clickable:(url.indexOf("lake")+1), fillColor:'blue', fillOpacity:0.02, strokeColor:(url.indexOf("lake")>0?'blue':'black'), strokeOpacity:0.5, strokeWeight:0.5}});
+  //map.data.setStyle( { clickable:(url.indexOf("lake")+1), fillColor:'blue', fillOpacity:0.02, strokeColor:(url.indexOf("lake")>0?'blue':'black'), strokeOpacity:0.5, strokeWeight:0.5 } );
+  //map.data.forEach((feature) => { alert(feature.getId()); console.log(feature.getProperties())}); 
+    // console.log(fc.features[0])}) //overrideStyle(f.features[0], {fillColor:"blue"}))})
+
+        map.data.addListener('click', 
+          function(event) {
+            var L = calneva.length;
+            function nameLU() { while(--L>0) if (calneva[L].Name == name) break; return L }
+            var name = event.feature.getProperty("Name"); nameLU(); alert(name+": POP/sqmi = "+calneva[L].POP+", MHI[$000] = "+calneva[L].MHI)
+          }
+        )
+/*
+      var src = 'https://raw.githubusercontent.com/Jordan-Hastings/Choro-Pilot/refs/heads/main/CalNeva-County.kml';
+      var src = 'https://raw.githubusercontent.com/Jordan-Hastings/Choro-Pilot/refs/heads/main/lake-tahoe_818.kml';
+        var kmlLayer = new google.maps.KmlLayer(src, {
+          suppressInfoWindows: true,
+          preserveViewport: false,
+          map: map
+        });
+//alert(google.maps.Polygons.length); 
+console.log(kmlLayer.Polygons[0])
+//if(paramsString.indexOf("C1")>0 || paramsString.indexOf("A1")>0) 
+// new MapLabel ({position:{lng:-122.09618346, lat:37.6949651289}, text:"HI", fontColor:"#ff00ff", fontSize:12})
+        kmlLayer.addListener('click', function(event) {
+          var content = event.featureData.infoWindowHtml;
+          var testimonial = document.getElementById('capture');
+          testimonial.innerHTML = content;
+        });
+*/
+      }
+      function hideshow(th) {//alert("hideshow "+th.checked+" "+(typeof map.data.getStyle()))
+          map.data.setStyle((feature) => {if (feature.getProperty("Name").indexOf("Tahoe")>0) { //return {fillOpacity:(th.checked?1:0)}})
+        //var style = map.data.getStyle(); alert(typeof style); // map.data.overrideStyle(feature, {fillOpacity:(th.checked?1:0)})
+          map.data.overrideStyle(feature, {zIndex:1, fillColor:'blue', fillOpacity:(th.checked?1:0.1), strokeWeight:0.5})
+          }
+        })
+      }
+async function loadGeoJsonFile(url) {
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Presume the file is geoJSON:
+  //const text = await response.clone().text(); console.log(text.length)
+    const data = await response.json();
+  //console.log(data.length)
+  //console.log("JSON data:", data)
+    map.data.addGeoJson(data); 
+  } catch (e) {
+    alert("Error processing GeoJSON file!");
+  }
+}
+function loadGeoJsonString(geoString) {
+  try {
+    const geojson = JSON.parse(geoString);
+
+    map.data.addGeoJson(geojson);
+  } catch (e) {
+    alert("Not a GeoJSON file!");
+  }
+
+//zoom(map);
+}
+    </script>
+
+    <!-- script src='maplabel1.js'> </script -->
+    <script async
+     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDmrLN2z0y1M2Dg8hvhfBckywh_kDXQC_k&callback=initMap">
+    </script>
+
+  </body>
+</html>
