@@ -30,41 +30,44 @@
       </tr>
     </table>
     <script>
-function initMap() { alert("at initMap")
 
-}
-async function loadGeoJsonFile(url) {
-  try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    // Presume the file is geoJSON:
-  //const text = await response.clone().text(); console.log(text.length)
-    const data = await response.json();
+  var map;
+  const URL = 'NevaONLY.geojson';  // <-- Change this, as approp
+  
+  function initMap() { alert("at initMap")
+    map = new google.maps.Map(document.getElementById('map'), {
+    center: new google.maps.LatLng(37, -117),
+    zoom: 6, zoomControl: true,
+    streetViewControl: false,
+    mapTypeId: 'roadmap'
+    });
+    loadGeoJsonFile(URL)
+  }
+      
+  async function loadGeoJsonFile(url) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  // Presume the file is geoJSON:
+      const data = await response.json();
   //console.log(data.length)
   //console.log("JSON data:", data)
-    map.data.addGeoJson(data); 
-  } catch (e) {
-    alert("Error processing GeoJSON file!");
+      map.data.addGeoJson(data); 
+    } catch (e) {
+      alert("Error processing GeoJSON file!");
+    }
   }
-}
-function loadGeoJsonString(geoString) {
-  try {
-    const geojson = JSON.parse(geoString);
-
-    map.data.addGeoJson(geojson);
-  } catch (e) {
-    alert("Not a GeoJSON file!");
+      
+  function loadGeoJsonString(geoString) {
+    try {
+      const geojson = JSON.parse(geoString);
+      map.data.addGeoJson(geojson);
+    } catch (e) {
+      alert("Not valid GeoJSON data!");
+    }
   }
-
-//zoom(map);
-}
     </script>
 
-    <!-- script src='maplabel1.js'> </script -->
     <script async
      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDmrLN2z0y1M2Dg8hvhfBckywh_kDXQC_k&callback=initMap">
     </script>
